@@ -162,7 +162,7 @@ def main(args):
             epoch_memory = []
             episode_memory = []
 
-            # The loop for actions/stepss
+            # The loop for actions/steps
             _observation = np.zeros(OBSERVATION_DIM)
             while True:
                 # sample one action with the given probability distribution
@@ -247,11 +247,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '--output-dir',
         type=str,
-        default='/tmp/pong_output')
+        default=r'D:\temp\rl\pong')
     parser.add_argument(
         '--job-dir',
         type=str,
-        default='/tmp/pong_output')
+        default=r'D:\temp\rl\pong')
 
     parser.add_argument(
         '--restore',

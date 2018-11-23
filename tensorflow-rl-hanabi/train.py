@@ -51,8 +51,9 @@ def build_graph(observations):
     """
     with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
         net = observations
-        net = tf.layers.dense(net, 128, use_bias=False, activation=tf.nn.relu)
-        net = tf.layers.dense(net, 128, use_bias=False, activation=tf.nn.relu)
+        net = tf.layers.dense(net, 128, activation=tf.nn.relu)
+        net = tf.layers.dense(net, 128, activation=tf.nn.relu)
+        net = tf.layers.dense(net, 128, activation=tf.nn.relu)
         logits = tf.layers.dense(net, len(ACTIONS), use_bias=False)
 
     return logits
@@ -239,12 +240,12 @@ if __name__ == '__main__':
     parser.add_argument('--render', default=False, action='store_true')
     parser.add_argument('--save-checkpoint-steps', type=int, default=1)
 
-    parser.add_argument('--learning-rate', type=float, default=5e-4)
+    parser.add_argument('--learning-rate', type=float, default=1e-5)
     parser.add_argument('--decay', type=float, default=0.99)
     parser.add_argument('--gamma', type=float, default=0.99)
 
     _args = parser.parse_args()
 
-    _args.max_to_keep = _args.n_epoch // _args.save_checkpoint_steps
+    _args.max_to_keep = 20#_args.n_epoch // _args.save_checkpoint_steps
 
     train(_args)
