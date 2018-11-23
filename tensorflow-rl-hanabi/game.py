@@ -43,3 +43,9 @@ class Game:
     @property
     def observation(self):
         return self.cards_on_table[1:]
+
+    def render(self):
+        print('Table: {}'.format(self.cards_on_table[1:].tolist()))
+        print('Error: {}'.format(self.errors))
+        print()
+

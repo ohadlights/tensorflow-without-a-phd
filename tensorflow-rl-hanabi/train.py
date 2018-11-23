@@ -240,7 +240,7 @@ if __name__ == '__main__':
     parser.add_argument('--render', default=False, action='store_true')
     parser.add_argument('--save-checkpoint-steps', type=int, default=1)
 
-    parser.add_argument('--learning-rate', type=float, default=1e-5)
+    parser.add_argument('--learning-rate', type=float, default=1e-6)
     parser.add_argument('--decay', type=float, default=0.99)
     parser.add_argument('--gamma', type=float, default=0.99)
 
