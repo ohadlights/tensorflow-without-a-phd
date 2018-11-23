@@ -21,15 +21,15 @@ import numpy as np
 import tensorflow as tf
 from agents.tools.wrappers import AutoReset
 
-from game import Game, MAX_ERRORS
+from entities.game import Game
 from helpers import discount_rewards
 
 
 # Actions to select to drop any one of the cards
-ACTIONS = [1, 2, 3]
+ACTIONS = list(range(0, Game.NUM_ACTIONS))
 
 # Observation includes entry for each card type which contains '0' or '1' if the card is on the table.
-OBSERVATION_DIM = len(ACTIONS)
+OBSERVATION_DIM = len(Game.COLORS) * Game.CARDS_MAX_VALUE
 
 MEMORY_CAPACITY = 100000
 ROLLOUT_SIZE = 10000
@@ -129,21 +129,21 @@ def train(args):
             #     image = tf.reshape(slice_, [1, 80, 80, 1])
             #     tf.summary.image('hidden_{:04d}'.format(h), image)
 
-            for var in tf.trainable_variables():
-                tf.summary.histogram(var.op.name, var)
-                tf.summary.scalar('{}_max'.format(var.op.name), tf.reduce_max(var))
-                tf.summary.scalar('{}_min'.format(var.op.name), tf.reduce_min(var))
+            # for var in tf.trainable_variables():
+            #     tf.summary.histogram(var.op.name, var)
+            #     tf.summary.scalar('{}_max'.format(var.op.name), tf.reduce_max(var))
+            #     tf.summary.scalar('{}_min'.format(var.op.name), tf.reduce_min(var))
 
             tf.summary.scalar('rollout_reward', rollout_reward)
             tf.summary.scalar('loss', loss)
 
             merged = tf.summary.merge_all()
 
-    env = Game()
+    game = Game()
     # tf.agents helper to more easily track consecutive pairs of frames
     # env = FrameHistory(inner_env, past_indices=[0, 1], flatten=False)
     # tf.agents helper to automatically reset the environment
-    env = AutoReset(env)
+    env = AutoReset(game)
 
     with tf.Session(graph=g) as sess:
         if args.restore:
@@ -158,7 +158,7 @@ def train(args):
 
         # lowest possible score after an episode as the
         # starting value of the running reward
-        _rollout_reward = -MAX_ERRORS
+        _rollout_reward = game.lowest_reward
 
         for i in range(args.n_epoch):
             print('>>>>>>> epoch {}'.format(i + 1))
@@ -176,6 +176,7 @@ def train(args):
                 _action = ACTIONS[_label]
 
                 _observation, _reward, _done, _ = env.step(_action)
+                _observation = _observation.reshape(OBSERVATION_DIM)
 
                 if args.render:
                     env.render()
@@ -240,12 +241,12 @@ if __name__ == '__main__':
     parser.add_argument('--render', default=False, action='store_true')
     parser.add_argument('--save-checkpoint-steps', type=int, default=1)
 
-    parser.add_argument('--learning-rate', type=float, default=1e-6)
+    parser.add_argument('--learning-rate', type=float, default=1e-4)
     parser.add_argument('--decay', type=float, default=0.99)
     parser.add_argument('--gamma', type=float, default=0.99)
 
     _args = parser.parse_args()
 
-    _args.max_to_keep = 20#_args.n_epoch // _args.save_checkpoint_steps
+    _args.max_to_keep = 5#_args.n_epoch // _args.save_checkpoint_steps
 
     train(_args)
