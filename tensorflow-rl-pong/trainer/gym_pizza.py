@@ -14,8 +14,8 @@ class PizzaGym:
         self.max_cells_in_slice = max_cells_in_slice
         self.board = None
         self.used_cells = None
-        self.num_slices = None
         self.cell_to_ingredient = None
+        self.slices = None
 
     def reset(self):
         self.board = np.array([
@@ -24,7 +24,7 @@ class PizzaGym:
             [1, 1, 1, 1, 1]
         ])
         self.used_cells = set()
-        self.num_slices = 0
+        self.slices = []
 
         self.cell_to_ingredient = {}
         for r in range(0, self.board.shape[0]):
@@ -45,7 +45,7 @@ class PizzaGym:
         # check if coordinates are valid
 
         if left > right or top > bottom:
-            return self.return_not_done()
+            return self.return_not_done(info='invalid coordinates')
 
         # infer cells and ingredients
 
@@ -61,17 +61,17 @@ class PizzaGym:
         # check if not selected more than the max allowed cells
 
         if len(selected_cells) > self.max_cells_in_slice:
-            return self.return_not_done()
+            return self.return_not_done(info='Too many cells. {}'.format(len(selected_cells)))
 
         # check if all cells were'nt selected in previous slice
 
         if len(selected_cells.intersection(self.used_cells)) > 0:
-            return self.return_not_done()
+            return self.return_not_done(info='Selected used cells. {}'.format(selected_cells.intersection(self.used_cells)))
 
         # check if min ingredients
 
-        if selected_ingredients[1] < self.min_ingred_in_slice or selected_ingredients[2] > self.min_ingred_in_slice:
-            return self.return_not_done()
+        if selected_ingredients[1] < self.min_ingred_in_slice or selected_ingredients[2] < self.min_ingred_in_slice:
+            return self.return_not_done(info='not enough ingredients. {} {}'.format(selected_ingredients[1], selected_ingredients[2]))
 
         # add all cells to selected cells
 
@@ -87,7 +87,7 @@ class PizzaGym:
 
         # +1 to number of slices
 
-        self.num_slices += 1
+        self.slices += [list(selected_cells)]
 
         # check if more slices can be made...
 
@@ -97,7 +97,7 @@ class PizzaGym:
             for c in range(0, self.board.shape[1] - 1):
                 cell = self.get_cell(row=r, col=c)
                 if cell not in self.used_cells:
-                    ingred_1, ingred_2 = self.count_ingredients_in_tree(row=r, col=c, used_cells=self.used_cells)
+                    ingred_1, ingred_2 = self.count_ingredients_in_tree(row=r, col=c, used_cells=self.used_cells.copy())
                     if ingred_1 >= self.min_ingred_in_slice and ingred_2 >= self.min_ingred_in_slice:
                         found_slice = True
                         break
@@ -105,10 +105,13 @@ class PizzaGym:
         # return result...
 
         if found_slice:
-            return self.board, 0, False, ''
+            return self.board, 0, False, 'There are more slices'
         else:
-            reward = 1 if self.num_slices > self.best_num_slices else -1
-            return self.board, reward, True, ''
+            reward = 1 if len(self.slices) > self.best_num_slices else -1
+            if reward == 1:
+                self.best_num_slices = len(self.slices)
+                print('Won with {} slices. {}'.format(len(self.slices), self.slices))
+            return self.board, reward, True, '{} with {} slices'.format('Won' if reward == 1 else 'Lost', len(self.slices))
 
     def count_ingredients_in_tree(self, row, col, used_cells):
         ingred_1 = 0
@@ -139,8 +142,8 @@ class PizzaGym:
 
         return ingred_1, ingred_2
 
-    def return_not_done(self):
-        return self.board, 0, False, ''
+    def return_not_done(self, info):
+        return self.board, 0, False, info
 
     def get_cell(self, row, col):
         return row * self.board.shape[1] + col

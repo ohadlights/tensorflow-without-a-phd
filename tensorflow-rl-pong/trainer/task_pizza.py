@@ -111,10 +111,10 @@ def main(args):
             train_logits_top = train_logits[:, COLS+COLS:COLS+COLS+ROWS]
             train_logits_bottom = train_logits[:, COLS+COLS+ROWS:]
 
-            labels_left = labels[:, :COLS]
-            labels_right = labels[:, COLS:COLS + COLS]
-            labels_top = labels[:, COLS + COLS:COLS + COLS + ROWS]
-            labels_bottom = labels[:, COLS + COLS + ROWS:]
+            labels_left = labels[:, 0]
+            labels_right = labels[:, 1]
+            labels_top = labels[:, 2]
+            labels_bottom = labels[:, 3]
 
             cross_entropies_left = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=train_logits_left,
                                                                                   labels=labels_left)
