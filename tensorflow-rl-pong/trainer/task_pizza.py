@@ -21,12 +21,11 @@ from builtins import input
 
 from trainer.helpers import discount_rewards, prepro
 import trainer.gym_pizza as gym
+from trainer.gym_pizza import ROWS, COLS
 from agents.tools.wrappers import AutoReset
 from collections import deque
 
 
-ROWS = 3
-COLS = 5
 OBSERVATION_DIM = ROWS * COLS
 LOGITS_SIZE = 2 * ROWS + 2 * COLS
 
@@ -50,6 +49,7 @@ def build_graph(observations):
     with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
         observations = tf.layers.flatten(observations)
         hidden = tf.layers.dense(observations, args.hidden_dim, use_bias=False, activation=tf.nn.relu)
+        hidden = tf.layers.dropout(hidden, rate=0.1)
         logits = tf.layers.dense(hidden, LOGITS_SIZE, use_bias=False)
 
     return logits

@@ -3,25 +3,29 @@ from collections import defaultdict
 import numpy as np
 
 
+ROWS = 6
+COLS = 7
 L = 1
-H = 6
+H = 5
 
 
 class PizzaGym:
-    def __init__(self, best_num_slices=1, min_ingred_in_slice=L, max_cells_in_slice=H):
-        self.best_num_slices = best_num_slices
+    def __init__(self, best_num_cells=2, min_ingred_in_slice=L, max_cells_in_slice=H):
+        self.best_num_cells = best_num_cells
         self.min_ingred_in_slice = min_ingred_in_slice
         self.max_cells_in_slice = max_cells_in_slice
         self.board = None
         self.used_cells = None
         self.cell_to_ingredient = None
-        self.slices = None
 
     def reset(self):
         self.board = np.array([
-            [1, 1, 1, 1, 1],
-            [1, 2, 2, 2, 1],
-            [1, 1, 1, 1, 1]
+            [1, 2, 2, 2, 1, 1, 1],
+            [2, 2, 2, 2, 1, 2, 2],
+            [1, 1, 2, 1, 1, 2, 1],
+            [1, 2, 2, 1, 2, 2, 2],
+            [1, 1, 1, 1, 1, 1, 2],
+            [1, 1, 1, 1, 1, 1, 2],
         ])
         self.used_cells = set()
         self.slices = []
@@ -107,10 +111,15 @@ class PizzaGym:
         if found_slice:
             return self.board, 0, False, 'There are more slices'
         else:
-            reward = 1 if len(self.slices) > self.best_num_slices else -1
-            if reward == 1:
-                self.best_num_slices = len(self.slices)
-                print('Won with {} slices. {}'.format(len(self.slices), self.slices))
+            if len(self.used_cells) > self.best_num_cells:
+                reward = 1  # min(len(self.slices) - self.best_num_slices + 1, 3)
+            elif len(self.used_cells) == self.best_num_cells:
+                reward = -0.5
+            else:
+                reward = -1  # max(len(self.slices) - self.best_num_slices, -3)
+            if reward >= 1:
+                self.best_num_cells = len(self.used_cells)
+                print('Won with {} cells. {}'.format(len(self.used_cells), self.slices))
             return self.board, reward, True, '{} with {} slices'.format('Won' if reward == 1 else 'Lost', len(self.slices))
 
     def count_ingredients_in_tree(self, row, col, used_cells):
